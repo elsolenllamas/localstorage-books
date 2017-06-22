@@ -20,6 +20,12 @@ body {
     padding:0px;
 }
 
+#books .book-result {
+	font-size:12px;
+	font-style:italic;
+}
+
 #books li span {
     margin:0px 15px 0px 15px;
 }
+

@@ -1,5 +1,10 @@
 let firstTime = true;
 
+let waiting = false;
+let counter = 0;
+let searchTimer;
+let searchInterval = 1000;
+
 function watchEvents() {
     const favIcons = document.querySelectorAll('.fav-icon');
     const booksIcons = document.querySelectorAll('.link-author');
@@ -8,46 +13,35 @@ function watchEvents() {
             favIcons[i].addEventListener("click", checkFav);
         }
     }
-
-    if(booksIcons) {
-        for(i=0;i<booksIcons.length; i++) {
-            booksIcons[i].addEventListener("click", getAuthorBooks);
-        }
-    }
     document.getElementById('favorites-list-container').style.display = 'block';
 }
 
-// get authors from API
-function getBooks() {
-    let xmlhttp = new XMLHttpRequest();
-    xmlhttp.onreadystatechange = function() {
-        if (xmlhttp.readyState == XMLHttpRequest.DONE ) {
-            if (xmlhttp.status == 200) {
-                const data = JSON.parse(xmlhttp.responseText);
-                printAuthors(data, printKeys);
-            }
-           else if (xmlhttp.status == 400) {
-                console.log('There was an error 400');
-           }
-           else {
-                console.log('something else other than 200 was returned');
-           }
-        }
-    };
-    xmlhttp.open("GET", "http://openlibrary.org/subjects/science_fiction.json?details=true", true);
-    xmlhttp.send();
+
+if(document.getElementById('search-input')){
+    document.getElementById('search-input').addEventListener('keyup', function () {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(searchBooks, searchInterval);
+    });
+
+    document.getElementById('search-input').addEventListener('keydown', function () {
+    clearTimeout(searchTimer);
+    });
 }
 
-function getAuthorBooks(event) {
-    event.preventDefault();
-    let query = event.target.innerText;
-    console.log(query);
+// get authors from API
+function searchBooks() {
+    let timer;
+
+    clearTimeout(timer);
+    timer = setTimeout(function() {
+    const searchInput = document.getElementById('search-input');
+    let query = searchInput.value;
     let xmlhttp = new XMLHttpRequest();
     xmlhttp.onreadystatechange = function() {
         if (xmlhttp.readyState == XMLHttpRequest.DONE ) {
             if (xmlhttp.status == 200) {
                 const data = JSON.parse(xmlhttp.responseText);
-                console.log(data.docs);
+                printAuthors(data.docs);
             }
            else if (xmlhttp.status == 400) {
                 console.log('There was an error 400');
@@ -59,43 +53,32 @@ function getAuthorBooks(event) {
     };
     xmlhttp.open("GET", "http://openlibrary.org/search.json?q="+ query, true);
     xmlhttp.send();
+    }, 1000);
 }
 
-
-// function with closure
-function printAuthors(data, callback) {
-    const authors = data.authors;
-    for(i=0;i<authors.length; i++) {
-        const mainTag = document.getElementById("books");
-        const namesItem = document.createElement("li");
-        namesItem.className = "names";
-        namesItem.innerHTML = '<span>' + authors[i].name + '</span>';
-        mainTag.appendChild(namesItem);
+function printAuthors(data) {
+    console.log(data);
+    // remove previous search
+    let booklist = document.querySelectorAll('.names');
+    for (let i = 0; i < booklist.length; i++) {
+        booklist[i].remove();
     }
-    callback(authors, printUsers);
-}
-
-// print stars in DOM
-function printKeys(data, callback) {
     for(i=0;i<data.length; i++) {
-        const authorLi = document.querySelectorAll('.names');
-        for(i=0;i<authorLi.length; i++) {
-            authorLi[i].insertAdjacentHTML('beforeend', '<i class="fa fa-star-o fav-icon" data-id='+ data[i].key +'></i>');
+        if (data[i].author_name !== undefined) {
+            const mainTag = document.getElementById("books");
+            const namesItem = document.createElement("li");
+            namesItem.className = "names";
+            namesItem.innerHTML = '<span>' + data[i].author_name + 
+            '</span>' + ' ' +'<span class="book-result">' + data[i].title +
+            '</span><i class="fa fa-star-o fav-icon" data-id='+ data[i].key +'></i>'
+            
+            mainTag.appendChild(namesItem);
         }
     }
     watchEvents();
-    callback(data);
     printFavorites();
 }
 
-function printUsers(data) { 
-    for(i=0;i<data.length; i++) {
-        const authorLi = document.querySelectorAll('.names');
-        for(i=0;i<authorLi.length; i++) {
-            authorLi[i].insertAdjacentHTML('afterBegin', '<i class="fa fa-user-o user-icon" data-author='+ data[i].key +'></i>');
-        }
-    }
-}
 
 // switch add/remove
 function checkFav(event) {
@@ -179,5 +162,5 @@ function printFavorites() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    getBooks();
+    //getBooks();
 }, false);

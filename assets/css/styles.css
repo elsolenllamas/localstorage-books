@@ -1,0 +1,25 @@
+body {
+    padding:20px;
+}
+
+.favorited {
+    color:coral;
+}
+
+#favorites-list-container {
+    display:none;
+}
+
+#favorites-list a {
+    display:block;
+}
+
+#books {
+    list-style-type:none;
+    margin:0px;
+    padding:0px;
+}
+
+#books li span {
+    margin:0px 15px 0px 15px;
+}
